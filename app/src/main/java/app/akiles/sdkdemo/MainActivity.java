@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import app.akiles.sdk.Akiles;
+import app.akiles.sdk.AkilesException;
 import app.akiles.sdk.Gadget;
 import app.akiles.sdk.GadgetAction;
 
@@ -66,49 +67,69 @@ public class MainActivity extends AppCompatActivity {
         ((Button) findViewById(R.id.btnAddSession)).setOnClickListener(v -> {
             String token = ((EditText) findViewById(R.id.inpToken)).getText().toString();
             executorService.execute(() -> {
-                akiles.addSession(token);
-                this.runOnUiThread(() -> {
-                    Toast.makeText(this, "Session added OK!", Toast.LENGTH_SHORT).show();
-                    updateSessions();
-                });
+                try {
+                    akiles.addSession(token);
+                    this.runOnUiThread(() -> {
+                        Toast.makeText(this, "Session added OK!", Toast.LENGTH_SHORT).show();
+                        updateSessions();
+                    });
+                } catch (AkilesException e) {
+                    showException(e);
+                }
             });
         });
         ((Button) findViewById(R.id.btnRemoveSession)).setOnClickListener(v -> {
             String sessionID = sessionSpinner.getSelectedItem().toString();
             executorService.execute(() -> {
-                akiles.removeSession(sessionID);
-                this.runOnUiThread(() -> {
-                    Toast.makeText(this, "Session removed OK!", Toast.LENGTH_SHORT).show();
-                    updateSessions();
-                });
+                try {
+                    akiles.removeSession(sessionID);
+                    this.runOnUiThread(() -> {
+                        Toast.makeText(this, "Session removed OK!", Toast.LENGTH_SHORT).show();
+                        updateSessions();
+                    });
+                } catch (AkilesException e) {
+                    showException(e);
+                }
             });
         });
         ((Button) findViewById(R.id.btnRemoveAllSessions)).setOnClickListener(v -> {
             executorService.execute(() -> {
-                akiles.removeAllSessions();
-                this.runOnUiThread(() -> {
-                    Toast.makeText(this, "All sessions removed OK!", Toast.LENGTH_SHORT).show();
-                    updateSessions();
-                });
+                try {
+                    akiles.removeAllSessions();
+                    this.runOnUiThread(() -> {
+                        Toast.makeText(this, "All sessions removed OK!", Toast.LENGTH_SHORT).show();
+                        updateSessions();
+                    });
+                } catch (AkilesException e) {
+                    showException(e);
+                }
             });
         });
         ((Button) findViewById(R.id.btnRefreshSession)).setOnClickListener(v -> {
             String sessionID = sessionSpinner.getSelectedItem().toString();
             executorService.execute(() -> {
-                akiles.refreshSession(sessionID);
-                this.runOnUiThread(() -> {
-                    Toast.makeText(this, "Session refreshed OK!", Toast.LENGTH_SHORT).show();
-                    updateGadgets();
-                });
+                try {
+                    akiles.refreshSession(sessionID);
+                    this.runOnUiThread(() -> {
+                        Toast.makeText(this, "Session refreshed OK!", Toast.LENGTH_SHORT).show();
+                        updateGadgets();
+                    });
+                } catch (AkilesException e) {
+                    showException(e);
+                }
             });
         });
         ((Button) findViewById(R.id.btnRefreshAllSessions)).setOnClickListener(v -> {
             executorService.execute(() -> {
-                akiles.refreshAllSessions();
-                this.runOnUiThread(() -> {
-                    Toast.makeText(this, "All sessions refreshed OK!", Toast.LENGTH_SHORT).show();
-                    updateGadgets();
-                });
+                try {
+                    akiles.refreshAllSessions();
+                    this.runOnUiThread(() -> {
+                        Toast.makeText(this, "All sessions refreshed OK!", Toast.LENGTH_SHORT).show();
+                        updateGadgets();
+                    });
+                } catch (AkilesException e) {
+                    showException(e);
+                }
             });
         });
 
@@ -124,7 +145,11 @@ public class MainActivity extends AppCompatActivity {
             spinner.setVisibility(View.VISIBLE);
 
             executorService.execute(() -> {
-                akiles.doGadgetAction(sessionID, gadgetID, actionID);
+                try {
+                    akiles.doGadgetAction(sessionID, gadgetID, actionID);
+                } catch (AkilesException e) {
+                    showException(e);
+                }
                 this.runOnUiThread(() -> {
                     ((View) findViewById(R.id.spinner)).setVisibility(View.GONE);
                 });
@@ -132,40 +157,56 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void updateSessions() {
-        String[] sessionIDs = akiles.getSessionIDs();
-        sessionSpinner = (Spinner) findViewById(R.id.inpSessionSpinner);
-        gadgetSpinner = (Spinner) findViewById(R.id.inpGadgetSpinner);
-        actionSpinner = (Spinner) findViewById(R.id.inpActionSpinner);
-        ArrayAdapter<String> adapter = new ArrayAdapter(
-                this,
-                android.R.layout.simple_spinner_item,
-                sessionIDs
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sessionSpinner.setAdapter(adapter);
+    private void showException(AkilesException e) {
+        this.runOnUiThread(() -> {
+            Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
+            updateGadgets();
+        });
+    }
 
-        updateGadgets();
+    private void updateSessions() {
+        try {
+            String[] sessionIDs = akiles.getSessionIDs();
+            sessionSpinner = (Spinner) findViewById(R.id.inpSessionSpinner);
+            gadgetSpinner = (Spinner) findViewById(R.id.inpGadgetSpinner);
+            actionSpinner = (Spinner) findViewById(R.id.inpActionSpinner);
+            ArrayAdapter<String> adapter = new ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    sessionIDs
+            );
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            sessionSpinner.setAdapter(adapter);
+
+            updateGadgets();
+        } catch (AkilesException e) {
+            showException(e);
+        }
     }
 
     private void updateGadgets() {
-        String sessionID = (String)sessionSpinner.getSelectedItem();
-        Gadget[] gadgets = {};
-        if (sessionID != null) {
-            gadgets = akiles.getGadgets(sessionID);
-        }
-        ArrayAdapter<Gadget> adapter = new ArrayAdapter(
-                this,
-                android.R.layout.simple_spinner_item,
-                gadgets
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        gadgetSpinner.setAdapter(adapter);
+        try {
+            String sessionID = (String)sessionSpinner.getSelectedItem();
+            Gadget[] gadgets = {};
+            if (sessionID != null) {
+                gadgets = akiles.getGadgets(sessionID);
+            }
+            ArrayAdapter<Gadget> adapter = new ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    gadgets
+            );
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            gadgetSpinner.setAdapter(adapter);
 
-        updateActions();
+            updateActions();
+        } catch (AkilesException e) {
+            showException(e);
+        }
     }
 
     private void updateActions() {
+
         Gadget gadget = (Gadget)gadgetSpinner.getSelectedItem();
         GadgetAction[] actions = {};
         if (gadget != null) {
