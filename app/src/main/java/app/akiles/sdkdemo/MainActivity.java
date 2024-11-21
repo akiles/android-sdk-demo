@@ -2,9 +2,8 @@ package app.akiles.sdkdemo;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -14,13 +13,16 @@ import android.widget.Toast;
 import android.widget.Spinner;
 import android.Manifest;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import app.akiles.sdk.ActionListener;
 import app.akiles.sdk.Akiles;
 import app.akiles.sdk.AkilesException;
 import app.akiles.sdk.Gadget;
 import app.akiles.sdk.GadgetAction;
+import app.akiles.sdk.Permissioner;
 
 public class MainActivity extends AppCompatActivity {
     ExecutorService executorService = Executors.newFixedThreadPool(1);
@@ -34,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        akiles = new Akiles(this);
+        akiles = new Akiles(this, "AndroidDemo", event -> runOnUiThread(() -> Toast.makeText(MainActivity.this, event.toString(), Toast.LENGTH_SHORT).show()));
 
         updateSessions();
 
@@ -144,15 +146,34 @@ public class MainActivity extends AppCompatActivity {
             }
             spinner.setVisibility(View.VISIBLE);
 
-            executorService.execute(() -> {
-                try {
-                    akiles.doGadgetAction(sessionID, gadgetID, actionID);
-                } catch (AkilesException e) {
-                    showException(e);
+            akiles.doGadgetAction(sessionID, gadgetID, actionID, null, new Permissioner() {
+                @Override
+                public boolean hasPermissions(String[] permissions) {
+                    boolean hasPermission = true;
+                    for (String permission : permissions) {
+                        if (checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_DENIED) {
+                            hasPermission = false;
+                            break;
+                        }
+                    }
+                    return hasPermission;
                 }
-                this.runOnUiThread(() -> {
-                    ((View) findViewById(R.id.spinner)).setVisibility(View.GONE);
-                });
+
+                @Override
+                public void requestPermissions(String[] permissions) {
+                    MainActivity.this.requestPermissions(permissions, BLE_REQUEST_CODE);
+                }
+            }, new ActionListener() {
+                @Override
+                public void onSuccess() {
+                    runOnUiThread(() -> spinner.setVisibility(View.GONE));
+                }
+
+                @Override
+                public void onFailure(AkilesException ex) {
+                    showException(ex);
+                    runOnUiThread(() -> spinner.setVisibility(View.GONE));
+                }
             });
         });
     }
@@ -186,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateGadgets() {
         try {
-            String sessionID = (String)sessionSpinner.getSelectedItem();
+            String sessionID = (String) sessionSpinner.getSelectedItem();
             Gadget[] gadgets = {};
             if (sessionID != null) {
                 gadgets = akiles.getGadgets(sessionID);
@@ -198,10 +219,9 @@ public class MainActivity extends AppCompatActivity {
             );
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             gadgetSpinner.setAdapter(adapter);
-
             updateActions();
-        } catch (AkilesException e) {
-            showException(e);
+        } catch (AkilesException ex)  {
+            showException(ex);
         }
     }
 

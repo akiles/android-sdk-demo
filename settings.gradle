@@ -22,5 +22,5 @@ dependencyResolutionManagement {
 rootProject.name = "sdkdemo"
 include ':app'
 include ':akiles-sdk'
-project(':akiles-sdk').projectDir = file("/home/dirbaio/akiles/firmware/apollo-android-sdk/sdk")
+project(':akiles-sdk').projectDir = file("/home/lulf/work/firmware/apollo-android-sdk/sdk")
 
