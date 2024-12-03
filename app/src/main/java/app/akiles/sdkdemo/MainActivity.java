@@ -1,8 +1,10 @@
 package app.akiles.sdkdemo;
 
+import static app.akiles.sdk.PermissionHelper.BLE_REQUEST_CODE;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,7 +15,7 @@ import android.widget.Toast;
 import android.widget.Spinner;
 import android.Manifest;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,7 +24,8 @@ import app.akiles.sdk.Akiles;
 import app.akiles.sdk.AkilesException;
 import app.akiles.sdk.Gadget;
 import app.akiles.sdk.GadgetAction;
-import app.akiles.sdk.Permissioner;
+import app.akiles.sdk.Hardware;
+import app.akiles.sdk.PermissionHelper;
 
 public class MainActivity extends AppCompatActivity {
     ExecutorService executorService = Executors.newFixedThreadPool(1);
@@ -30,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     Spinner sessionSpinner;
     Spinner gadgetSpinner;
     Spinner actionSpinner;
+    Spinner hardwareSpinner;
+    PermissionHelper permissionHelper = new PermissionHelper(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         sessionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                System.out.println("Update gadgets");
                 updateGadgets();
             }
 
@@ -52,18 +58,20 @@ public class MainActivity extends AppCompatActivity {
         gadgetSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                System.out.println("Update actions");
                 updateActions();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) { }
         });
+        hardwareSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+            }
 
-        ((Button) findViewById(R.id.btnRequestBle)).setOnClickListener(v -> {
-            requestPermissions(new String[]{
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_CONNECT,
-            },BLE_REQUEST_CODE);
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) { }
         });
 
         ((Button) findViewById(R.id.btnAddSession)).setOnClickListener(v -> {
@@ -146,24 +154,7 @@ public class MainActivity extends AppCompatActivity {
             }
             spinner.setVisibility(View.VISIBLE);
 
-            akiles.doGadgetAction(sessionID, gadgetID, actionID, null, new Permissioner() {
-                @Override
-                public boolean hasPermissions(String[] permissions) {
-                    boolean hasPermission = true;
-                    for (String permission : permissions) {
-                        if (checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_DENIED) {
-                            hasPermission = false;
-                            break;
-                        }
-                    }
-                    return hasPermission;
-                }
-
-                @Override
-                public void requestPermissions(String[] permissions) {
-                    MainActivity.this.requestPermissions(permissions, BLE_REQUEST_CODE);
-                }
-            }, new ActionListener() {
+            executorService.execute(() -> akiles.doGadgetAction(sessionID, gadgetID, actionID, null, permissionHelper, new ActionListener() {
                 @Override
                 public void onSuccess() {
                     runOnUiThread(() -> spinner.setVisibility(View.GONE));
@@ -174,11 +165,36 @@ public class MainActivity extends AppCompatActivity {
                     showException(ex);
                     runOnUiThread(() -> spinner.setVisibility(View.GONE));
                 }
+            }));
+        });
+
+        ((Button) findViewById(R.id.btnSync)).setOnClickListener(v -> {
+            String sessionID = sessionSpinner.getSelectedItem().toString();
+            String hardwareID = ((Hardware)hardwareSpinner.getSelectedItem()).id;
+
+            View spinner = ((View) findViewById(R.id.spinner2));
+            if(spinner.getVisibility() == View.VISIBLE) {
+                return;
+            }
+            spinner.setVisibility(View.VISIBLE);
+
+            executorService.execute(() -> {
+                try {
+                    akiles.doHardwareSync(sessionID, hardwareID, permissionHelper);
+                    runOnUiThread(() -> spinner.setVisibility(View.GONE));
+                    this.runOnUiThread(() -> {
+                        Toast.makeText(this, "Hardware Synced", Toast.LENGTH_LONG).show();
+                    });
+                } catch (AkilesException e) {
+                    runOnUiThread(() -> spinner.setVisibility(View.GONE));
+                    showException(e);
+                }
             });
         });
     }
 
     private void showException(AkilesException e) {
+        e.printStackTrace();
         this.runOnUiThread(() -> {
             Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
             updateGadgets();
@@ -191,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
             sessionSpinner = (Spinner) findViewById(R.id.inpSessionSpinner);
             gadgetSpinner = (Spinner) findViewById(R.id.inpGadgetSpinner);
             actionSpinner = (Spinner) findViewById(R.id.inpActionSpinner);
+            hardwareSpinner = (Spinner) findViewById(R.id.inpHardwareSpinner);
             ArrayAdapter<String> adapter = new ArrayAdapter(
                     this,
                     android.R.layout.simple_spinner_item,
@@ -220,13 +237,13 @@ public class MainActivity extends AppCompatActivity {
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             gadgetSpinner.setAdapter(adapter);
             updateActions();
+            updateHardwares();
         } catch (AkilesException ex)  {
             showException(ex);
         }
     }
 
     private void updateActions() {
-
         Gadget gadget = (Gadget)gadgetSpinner.getSelectedItem();
         GadgetAction[] actions = {};
         if (gadget != null) {
@@ -241,14 +258,30 @@ public class MainActivity extends AppCompatActivity {
         actionSpinner.setAdapter(adapter);
     }
 
-    public static final int BLE_REQUEST_CODE = 123;
+    private void updateHardwares() {
+        try {
+            String sessionID = (String) sessionSpinner.getSelectedItem();
+            Hardware[] hardwares = {};
+            if (sessionID != null) {
+                hardwares = akiles.getHardwares(sessionID);
+            }
+
+            ArrayAdapter<Hardware> adapter = new ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    hardwares
+            );
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            hardwareSpinner.setAdapter(adapter);
+        } catch (AkilesException ex)  {
+            showException(ex);
+        }
+    }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case BLE_REQUEST_CODE:
-                Toast.makeText(this, "Permissions granted OK!", Toast.LENGTH_SHORT).show();
-        }
+        permissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }
