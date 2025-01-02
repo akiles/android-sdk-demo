@@ -15,6 +15,8 @@ import android.widget.Toast;
 import android.widget.Spinner;
 import android.Manifest;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,6 +28,7 @@ import app.akiles.sdk.Gadget;
 import app.akiles.sdk.GadgetAction;
 import app.akiles.sdk.Hardware;
 import app.akiles.sdk.PermissionHelper;
+import app.akiles.sdk.ScanListener;
 
 public class MainActivity extends AppCompatActivity {
     ExecutorService executorService = Executors.newFixedThreadPool(1);
@@ -191,6 +194,28 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         });
+
+        ((Button) findViewById(R.id.btnScan)).setOnClickListener(v -> {
+            View spinner = ((View) findViewById(R.id.spinner2));
+            if(spinner.getVisibility() == View.VISIBLE) {
+                return;
+            }
+            spinner.setVisibility(View.VISIBLE);
+
+            clearHardwares();
+            executorService.execute(() -> {
+                try {
+                    akiles.getNearbyHardwares(permissionHelper, hw -> runOnUiThread(() -> updateHardwares(hw)));
+                    runOnUiThread(() -> {
+                        spinner.setVisibility(View.GONE);
+                        Toast.makeText(this, "Scan finished", Toast.LENGTH_LONG).show();
+                    });
+                } catch (AkilesException e) {
+                    runOnUiThread(() -> spinner.setVisibility(View.GONE));
+                    showException(e);
+                }
+            });
+        });
     }
 
     private void showException(AkilesException e) {
@@ -237,7 +262,6 @@ public class MainActivity extends AppCompatActivity {
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             gadgetSpinner.setAdapter(adapter);
             updateActions();
-            updateHardwares();
         } catch (AkilesException ex)  {
             showException(ex);
         }
@@ -258,25 +282,25 @@ public class MainActivity extends AppCompatActivity {
         actionSpinner.setAdapter(adapter);
     }
 
-    private void updateHardwares() {
-        try {
-            String sessionID = (String) sessionSpinner.getSelectedItem();
-            Hardware[] hardwares = {};
-            if (sessionID != null) {
-                hardwares = akiles.getHardwares(sessionID);
-            }
+    private void updateHardwares(Hardware hw) {
+        System.out.println("Discovered " + hw.id.toString());
+        ArrayAdapter<Hardware> adapter = (ArrayAdapter<Hardware>) hardwareSpinner.getAdapter();
+        adapter.add(hw);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        hardwareSpinner.setAdapter(adapter);
+    }
 
-            ArrayAdapter<Hardware> adapter = new ArrayAdapter(
-                    this,
-                    android.R.layout.simple_spinner_item,
-                    hardwares
-            );
+    private void clearHardwares() {
+        ArrayList<Hardware> hardwares = new ArrayList<>();
 
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            hardwareSpinner.setAdapter(adapter);
-        } catch (AkilesException ex)  {
-            showException(ex);
-        }
+        ArrayAdapter<Hardware> adapter = new ArrayAdapter(
+                this,
+                android.R.layout.simple_spinner_item,
+                hardwares
+        );
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        hardwareSpinner.setAdapter(adapter);
     }
 
     @Override
