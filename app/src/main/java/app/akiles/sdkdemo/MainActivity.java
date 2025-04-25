@@ -16,6 +16,7 @@ import android.widget.Spinner;
 import android.Manifest;
 
 import java.lang.reflect.Array;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
@@ -183,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
 
             executorService.execute(() -> {
                 try {
-                    akiles.doHardwareSync(sessionID, hardwareID, permissionHelper);
+                    akiles.doHardwareSync(sessionID, hardwareID, Duration.ofSeconds(60), permissionHelper);
                     runOnUiThread(() -> spinner.setVisibility(View.GONE));
                     this.runOnUiThread(() -> {
                         Toast.makeText(this, "Hardware Synced", Toast.LENGTH_LONG).show();
@@ -196,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         ((Button) findViewById(R.id.btnScan)).setOnClickListener(v -> {
+            String sessionID = sessionSpinner.getSelectedItem().toString();
             View spinner = ((View) findViewById(R.id.spinner2));
             if(spinner.getVisibility() == View.VISIBLE) {
                 return;
@@ -205,7 +207,8 @@ public class MainActivity extends AppCompatActivity {
             clearHardwares();
             executorService.execute(() -> {
                 try {
-                    akiles.getNearbyHardwares(permissionHelper, hw -> runOnUiThread(() -> updateHardwares(hw)));
+                    akiles.getNearbyHardwares(sessionID, permissionHelper, Duration.ofSeconds(60),
+                            hw -> runOnUiThread(() -> updateHardwares(hw)));
                     runOnUiThread(() -> {
                         spinner.setVisibility(View.GONE);
                         Toast.makeText(this, "Scan finished", Toast.LENGTH_LONG).show();
