@@ -250,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateGadgets() {
         try {
             String sessionID = (String) sessionSpinner.getSelectedItem();
+            Gadget previousSelected = (Gadget) gadgetSpinner.getSelectedItem();
             Gadget[] gadgets = {};
             if (sessionID != null) {
                 gadgets = akiles.getGadgets(sessionID);
@@ -261,6 +262,14 @@ public class MainActivity extends AppCompatActivity {
             );
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             gadgetSpinner.setAdapter(adapter);
+
+            if(previousSelected != null) {
+                for(int i = 0; i < gadgets.length; i++) {
+                    if(gadgets[i].id.equals(previousSelected.id)) {
+                        gadgetSpinner.setSelection(i);
+                    }
+                }
+            }
             updateActions();
         } catch (AkilesException ex)  {
             showException(ex);
@@ -269,6 +278,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateActions() {
         Gadget gadget = (Gadget)gadgetSpinner.getSelectedItem();
+        GadgetAction previousSelected = (GadgetAction)actionSpinner.getSelectedItem();
         GadgetAction[] actions = {};
         if (gadget != null) {
             actions = gadget.actions;
@@ -280,6 +290,13 @@ public class MainActivity extends AppCompatActivity {
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         actionSpinner.setAdapter(adapter);
+        if(previousSelected != null) {
+            for(int i = 0; i < actions.length; i++) {
+                if(actions[i].id.equals(previousSelected.id)) {
+                    actionSpinner.setSelection(i);
+                }
+            }
+        }
     }
 
     private void updateHardwares(Hardware hw) {
