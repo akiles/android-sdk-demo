@@ -1,7 +1,5 @@
 package app.akiles.sdkdemo;
 
-import static app.akiles.sdk.PermissionHelper.BLE_REQUEST_CODE;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,12 +11,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import android.widget.Spinner;
-import android.Manifest;
 
-import java.lang.reflect.Array;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,7 +24,6 @@ import app.akiles.sdk.Gadget;
 import app.akiles.sdk.GadgetAction;
 import app.akiles.sdk.Hardware;
 import app.akiles.sdk.PermissionHelper;
-import app.akiles.sdk.ScanListener;
 
 public class MainActivity extends AppCompatActivity {
     ExecutorService executorService = Executors.newFixedThreadPool(1);
@@ -207,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
             clearHardwares();
             executorService.execute(() -> {
                 try {
-                    akiles.getNearbyHardwares(sessionID, permissionHelper, Duration.ofSeconds(60),
+                    akiles.getNearbyHardwares(permissionHelper, Duration.ofSeconds(60),
                             hw -> runOnUiThread(() -> updateHardwares(hw)));
                     runOnUiThread(() -> {
                         spinner.setVisibility(View.GONE);
@@ -218,6 +212,14 @@ public class MainActivity extends AppCompatActivity {
                     showException(e);
                 }
             });
+        });
+
+        ((Button) findViewById(R.id.btnScanCard)).setOnClickListener(v -> {
+            try {
+                akiles.scanCard();
+            } catch (AkilesException e) {
+                showException(e);
+            }
         });
     }
 
