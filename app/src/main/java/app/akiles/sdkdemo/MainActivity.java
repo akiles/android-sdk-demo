@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -24,6 +25,7 @@ import app.akiles.sdk.Gadget;
 import app.akiles.sdk.GadgetAction;
 import app.akiles.sdk.Hardware;
 import app.akiles.sdk.PermissionHelper;
+import app.akiles.sdk.Card;
 
 public class MainActivity extends AppCompatActivity {
     ExecutorService executorService = Executors.newFixedThreadPool(1);
@@ -215,11 +217,22 @@ public class MainActivity extends AppCompatActivity {
         });
 
         ((Button) findViewById(R.id.btnScanCard)).setOnClickListener(v -> {
-            try {
-                akiles.scanCard();
-            } catch (AkilesException e) {
-                showException(e);
-            }
+            executorService.execute(() -> {
+                try {
+                    Card card = akiles.scanCard();
+                    Log.i("ak", "is akiles card: " + card.isAkilesCard());
+                    Log.i("ak", "UID: " + card.getUid());
+                    if (card.isAkilesCard()) {
+                        card.update();
+                    }
+                } catch (AkilesException e) {
+                    showException(e);
+                }
+            });
+        });
+
+        ((Button) findViewById(R.id.btnCancelScanCard)).setOnClickListener(v -> {
+            akiles.cancelScanCard();
         });
     }
 
