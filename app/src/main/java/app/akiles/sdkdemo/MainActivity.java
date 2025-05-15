@@ -225,6 +225,7 @@ public class MainActivity extends AppCompatActivity {
                     if (card.isAkilesCard()) {
                         card.update();
                     }
+                    card.close();
                 } catch (AkilesException e) {
                     showException(e);
                 }
