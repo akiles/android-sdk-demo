@@ -15,33 +15,36 @@ import android.widget.Spinner;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import app.akiles.sdk.ActionListener;
+import app.akiles.sdk.ActionBluetoothStatus;
+import app.akiles.sdk.ActionCallback;
+import app.akiles.sdk.ActionInternetStatus;
 import app.akiles.sdk.Akiles;
 import app.akiles.sdk.AkilesException;
+import app.akiles.sdk.Callback;
 import app.akiles.sdk.Gadget;
 import app.akiles.sdk.GadgetAction;
 import app.akiles.sdk.Hardware;
-import app.akiles.sdk.PermissionHelper;
 import app.akiles.sdk.Card;
+import app.akiles.sdk.ScanCallback;
+import app.akiles.sdk.SyncCallback;
+import app.akiles.sdk.SyncStatus;
 
 public class MainActivity extends AppCompatActivity {
-    ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private static final String TAG = "ak";
+
     Akiles akiles;
     Spinner sessionSpinner;
     Spinner gadgetSpinner;
     Spinner actionSpinner;
     Spinner hardwareSpinner;
-    PermissionHelper permissionHelper = new PermissionHelper(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        akiles = new Akiles(this, "AndroidDemo", event -> runOnUiThread(() -> Toast.makeText(MainActivity.this, event.toString(), Toast.LENGTH_SHORT).show()));
+        akiles = new Akiles(this);
 
         updateSessions();
 
@@ -76,69 +79,70 @@ public class MainActivity extends AppCompatActivity {
 
         ((Button) findViewById(R.id.btnAddSession)).setOnClickListener(v -> {
             String token = ((EditText) findViewById(R.id.inpToken)).getText().toString();
-            executorService.execute(() -> {
-                try {
-                    akiles.addSession(token);
-                    this.runOnUiThread(() -> {
-                        Toast.makeText(this, "Session added OK!", Toast.LENGTH_SHORT).show();
+            akiles.addSession(token, new Callback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Session added OK!", Toast.LENGTH_SHORT).show();
                         updateSessions();
                     });
-                } catch (AkilesException e) {
-                    showException(e);
+                }
+
+                @Override
+                public void onError(AkilesException ex) {
+                    showException(ex);
                 }
             });
         });
         ((Button) findViewById(R.id.btnRemoveSession)).setOnClickListener(v -> {
             String sessionID = sessionSpinner.getSelectedItem().toString();
-            executorService.execute(() -> {
-                try {
-                    akiles.removeSession(sessionID);
-                    this.runOnUiThread(() -> {
-                        Toast.makeText(this, "Session removed OK!", Toast.LENGTH_SHORT).show();
-                        updateSessions();
-                    });
-                } catch (AkilesException e) {
-                    showException(e);
-                }
-            });
+            try {
+                akiles.removeSession(sessionID);
+            } catch (AkilesException e) {
+                showException(e);
+            }
+            Toast.makeText(this, "Session removed OK!", Toast.LENGTH_SHORT).show();
+            updateSessions();
         });
         ((Button) findViewById(R.id.btnRemoveAllSessions)).setOnClickListener(v -> {
-            executorService.execute(() -> {
-                try {
-                    akiles.removeAllSessions();
-                    this.runOnUiThread(() -> {
-                        Toast.makeText(this, "All sessions removed OK!", Toast.LENGTH_SHORT).show();
-                        updateSessions();
-                    });
-                } catch (AkilesException e) {
-                    showException(e);
-                }
-            });
+            try {
+                akiles.removeAllSessions();
+            } catch (AkilesException e) {
+                showException(e);
+            }
+            Toast.makeText(this, "All sessions removed OK!", Toast.LENGTH_SHORT).show();
+            updateSessions();
         });
         ((Button) findViewById(R.id.btnRefreshSession)).setOnClickListener(v -> {
             String sessionID = sessionSpinner.getSelectedItem().toString();
-            executorService.execute(() -> {
-                try {
-                    akiles.refreshSession(sessionID);
-                    this.runOnUiThread(() -> {
-                        Toast.makeText(this, "Session refreshed OK!", Toast.LENGTH_SHORT).show();
+            akiles.refreshSession(sessionID, new Callback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Session refreshed OK!", Toast.LENGTH_SHORT).show();
                         updateGadgets();
                     });
-                } catch (AkilesException e) {
-                    showException(e);
+                }
+
+                @Override
+                public void onError(AkilesException ex) {
+                    showException(ex);
                 }
             });
         });
         ((Button) findViewById(R.id.btnRefreshAllSessions)).setOnClickListener(v -> {
-            executorService.execute(() -> {
-                try {
-                    akiles.refreshAllSessions();
-                    this.runOnUiThread(() -> {
-                        Toast.makeText(this, "All sessions refreshed OK!", Toast.LENGTH_SHORT).show();
+            akiles.refreshAllSessions(new Callback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "All sessions refreshed OK!", Toast.LENGTH_SHORT).show();
                         updateGadgets();
                     });
-                } catch (AkilesException e) {
-                    showException(e);
+                }
+
+                @Override
+                public void onError(AkilesException ex) {
+                    showException(ex);
                 }
             });
         });
@@ -154,18 +158,54 @@ public class MainActivity extends AppCompatActivity {
             }
             spinner.setVisibility(View.VISIBLE);
 
-            executorService.execute(() -> akiles.doGadgetAction(sessionID, gadgetID, actionID, null, permissionHelper, new ActionListener() {
+            akiles.action(sessionID, gadgetID, actionID, new ActionCallback() {
                 @Override
                 public void onSuccess() {
+                    Log.i(TAG, "action: onSuccess");
                     runOnUiThread(() -> spinner.setVisibility(View.GONE));
                 }
 
                 @Override
-                public void onFailure(AkilesException ex) {
-                    showException(ex);
+                public void onError(AkilesException ex) {
+                    Log.i(TAG, "action: onError " + ex);
                     runOnUiThread(() -> spinner.setVisibility(View.GONE));
                 }
-            }));
+
+                @Override
+                public void onInternetSuccess() {
+                    Log.i(TAG, "action: onInternetSuccess");
+                }
+
+                @Override
+                public void onInternetError(AkilesException ex) {
+                    Log.i(TAG, "action: onInternetError " + ex);
+                }
+
+                @Override
+                public void onInternetStatus(ActionInternetStatus status) {
+                    Log.i(TAG, "action: onInternetStatus " + status);
+                }
+
+                @Override
+                public void onBluetoothSuccess() {
+                    Log.i(TAG, "action: onBluetoothSuccess");
+                }
+
+                @Override
+                public void onBluetoothError(AkilesException ex) {
+                    Log.i(TAG, "action: onBluetoothError " + ex);
+                }
+
+                @Override
+                public void onBluetoothStatus(ActionBluetoothStatus status) {
+                    Log.i(TAG, "action: onBluetoothStatus " + status);
+                }
+
+                @Override
+                public void onBluetoothStatusProgress(float progress) {
+                    Log.i(TAG, "action: onBluetoothStatusProgress " + progress);
+                }
+            });
         });
 
         ((Button) findViewById(R.id.btnSync)).setOnClickListener(v -> {
@@ -178,22 +218,35 @@ public class MainActivity extends AppCompatActivity {
             }
             spinner.setVisibility(View.VISIBLE);
 
-            executorService.execute(() -> {
-                try {
-                    akiles.doHardwareSync(sessionID, hardwareID, Duration.ofSeconds(60), permissionHelper);
-                    runOnUiThread(() -> spinner.setVisibility(View.GONE));
-                    this.runOnUiThread(() -> {
-                        Toast.makeText(this, "Hardware Synced", Toast.LENGTH_LONG).show();
+            akiles.sync(sessionID, hardwareID, Duration.ofSeconds(60), new SyncCallback() {
+                @Override
+                public void onSuccess() {
+                    Log.i(TAG, "sync: onSuccess");
+                    runOnUiThread(() -> {
+                        spinner.setVisibility(View.GONE);
+                        Toast.makeText(MainActivity.this, "Hardware Synced", Toast.LENGTH_LONG).show();
                     });
-                } catch (AkilesException e) {
+                }
+
+                @Override
+                public void onError(AkilesException ex) {
+                    Log.i(TAG, "sync: onError " + ex);
                     runOnUiThread(() -> spinner.setVisibility(View.GONE));
-                    showException(e);
+                }
+
+                @Override
+                public void onStatus(SyncStatus status) {
+                    Log.i(TAG, "sync: onStatus " + status);
+                }
+
+                @Override
+                public void onStatusProgress(float progress) {
+                    Log.i(TAG, "sync: onStatusProgress " + progress);
                 }
             });
         });
 
         ((Button) findViewById(R.id.btnScan)).setOnClickListener(v -> {
-            String sessionID = sessionSpinner.getSelectedItem().toString();
             View spinner = ((View) findViewById(R.id.spinner2));
             if(spinner.getVisibility() == View.VISIBLE) {
                 return;
@@ -201,33 +254,57 @@ public class MainActivity extends AppCompatActivity {
             spinner.setVisibility(View.VISIBLE);
 
             clearHardwares();
-            executorService.execute(() -> {
-                try {
-                    akiles.getNearbyHardwares(permissionHelper, Duration.ofSeconds(60),
-                            hw -> runOnUiThread(() -> updateHardwares(hw)));
+            akiles.scan(Duration.ofSeconds(10), new ScanCallback() {
+                @Override
+                public void onDiscover(Hardware hw) {
+                    runOnUiThread(() -> updateHardwares(hw));
+                }
+
+                @Override
+                public void onSuccess() {
                     runOnUiThread(() -> {
                         spinner.setVisibility(View.GONE);
-                        Toast.makeText(this, "Scan finished", Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "Scan finished", Toast.LENGTH_LONG).show();
                     });
-                } catch (AkilesException e) {
+                }
+
+                @Override
+                public void onError(AkilesException ex) {
                     runOnUiThread(() -> spinner.setVisibility(View.GONE));
-                    showException(e);
+                    showException(ex);
                 }
             });
         });
 
         ((Button) findViewById(R.id.btnScanCard)).setOnClickListener(v -> {
-            executorService.execute(() -> {
-                try {
-                    Card card = akiles.scanCard();
-                    Log.i("ak", "is akiles card: " + card.isAkilesCard());
-                    Log.i("ak", "UID: " + card.getUid());
+            akiles.scanCard(new Callback<Card>() {
+                @Override
+                public void onSuccess(Card card) {
+                    Log.i(TAG, "is akiles card: " + card.isAkilesCard());
+                    Log.i(TAG, "UID: " + card.getUid());
                     if (card.isAkilesCard()) {
-                        card.update();
+                        card.update(new Callback<Void>() {
+                            @Override
+                            public void onSuccess(Void result) {
+                                Log.i("ak", "Card updated OK");
+                                card.close();
+                            }
+
+                            @Override
+                            public void onError(AkilesException ex) {
+                                Log.i("ak", "Card update error");
+                                ex.printStackTrace();
+                                card.close();
+                            }
+                        });
+                    } else {
+                        card.close();
                     }
-                    card.close();
-                } catch (AkilesException e) {
-                    showException(e);
+                }
+
+                @Override
+                public void onError(AkilesException ex) {
+                    showException(ex);
                 }
             });
         });
@@ -342,6 +419,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        permissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        akiles.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }
