@@ -19,9 +19,11 @@ import java.util.ArrayList;
 import app.akiles.sdk.ActionBluetoothStatus;
 import app.akiles.sdk.ActionCallback;
 import app.akiles.sdk.ActionInternetStatus;
+import app.akiles.sdk.ActionOptions;
 import app.akiles.sdk.Akiles;
 import app.akiles.sdk.AkilesException;
 import app.akiles.sdk.Callback;
+import app.akiles.sdk.Cancel;
 import app.akiles.sdk.Gadget;
 import app.akiles.sdk.GadgetAction;
 import app.akiles.sdk.Hardware;
@@ -38,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
     Spinner gadgetSpinner;
     Spinner actionSpinner;
     Spinner hardwareSpinner;
+
+    private Cancel cancel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -158,7 +162,8 @@ public class MainActivity extends AppCompatActivity {
             }
             spinner.setVisibility(View.VISIBLE);
 
-            akiles.action(sessionID, gadgetID, actionID, new ActionCallback() {
+            ActionOptions options = new ActionOptions();
+            akiles.action(sessionID, gadgetID, actionID, options, new ActionCallback() {
                 @Override
                 public void onSuccess() {
                     Log.i(TAG, "action: onSuccess");
@@ -218,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
             }
             spinner.setVisibility(View.VISIBLE);
 
-            akiles.sync(sessionID, hardwareID, Duration.ofSeconds(60), new SyncCallback() {
+            akiles.sync(sessionID, hardwareID, new SyncCallback() {
                 @Override
                 public void onSuccess() {
                     Log.i(TAG, "sync: onSuccess");
@@ -254,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
             spinner.setVisibility(View.VISIBLE);
 
             clearHardwares();
-            akiles.scan(Duration.ofSeconds(10), new ScanCallback() {
+            akiles.scan(new ScanCallback() {
                 @Override
                 public void onDiscover(Hardware hw) {
                     runOnUiThread(() -> updateHardwares(hw));
@@ -277,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         ((Button) findViewById(R.id.btnScanCard)).setOnClickListener(v -> {
-            akiles.scanCard(new Callback<Card>() {
+            cancel = akiles.scanCard(new Callback<Card>() {
                 @Override
                 public void onSuccess(Card card) {
                     Log.i(TAG, "is akiles card: " + card.isAkilesCard());
@@ -310,7 +315,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         ((Button) findViewById(R.id.btnCancelScanCard)).setOnClickListener(v -> {
-            akiles.cancelScanCard();
+            if(cancel != null){
+                cancel.cancel();
+            }
         });
     }
 
