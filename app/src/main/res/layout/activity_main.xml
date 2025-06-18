@@ -1,69 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
-
-    <TextView
-        style="?android:attr/listSeparatorTextViewStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add session token"
-        android:paddingTop="40dp"
-        />
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="16dp"
+        tools:context=".MainActivity">
+
+    <!-- Section: Add Session Token -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Session Token"
+        android:textAppearance="?attr/textAppearanceHeadline6" /> <!-- Nicer headline style -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
 
         <EditText
             android:id="@+id/inpToken"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10"
             android:hint="Session token"
-            android:inputType="text" />
+            android:inputType="text"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/btnAddSession"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Add" />
-
     </LinearLayout>
 
+    <!-- Section: Sessions -->
     <TextView
-        style="?android:attr/listSeparatorTextViewStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Sessions"
-        android:paddingTop="40dp" />
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:layout_marginTop="24dp" />
 
     <Spinner
         android:id="@+id/inpSessionSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@style/Widget.AppCompat.Spinner.Underlined"
-    />
+        android:layout_marginTop="8dp"
+        android:minHeight="48dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
 
         <Button
             android:id="@+id/btnRemoveSession"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Remove" />
+            android:text="Remove"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/btnRemoveAllSessions"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Remove all" />
@@ -72,49 +86,59 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
 
         <Button
             android:id="@+id/btnRefreshSession"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Refresh" />
+            android:text="Refresh"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/btnRefreshAllSessions"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Refresh all" />
     </LinearLayout>
 
+    <!-- Section: Gadgets -->
     <TextView
-        style="?android:attr/listSeparatorTextViewStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Gadgets"
-        android:paddingTop="40dp" />
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:layout_marginTop="24dp" />
 
     <Spinner
         android:id="@+id/inpGadgetSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@style/Widget.AppCompat.Spinner.Underlined"
-        />
+        android:layout_marginTop="8dp"
+        android:minHeight="48dp"/>
 
     <Spinner
         android:id="@+id/inpActionSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         style="@style/Widget.AppCompat.Spinner.Underlined"
-        />
+        android:layout_marginTop="8dp"
+        android:minHeight="48dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
 
         <Button
             android:id="@+id/btnOpen"
+            style="@style/Widget.MaterialComponents.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Open" />
@@ -122,75 +146,95 @@
         <ProgressBar
             android:id="@+id/spinner"
             style="?android:attr/progressBarStyle"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
             android:visibility="gone" />
-
     </LinearLayout>
 
+    <!-- Section: Hardware -->
     <TextView
         android:id="@+id/hardwareTextView"
-        style="?android:attr/listSeparatorTextViewStyle"
         android:layout_width="match_parent"
-        android:layout_height="97dp"
-        android:paddingTop="40dp"
-        android:text="Hardwares" />
+        android:layout_height="wrap_content"
+        android:text="Hardware"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:layout_marginTop="24dp" />
 
     <Spinner
         android:id="@+id/inpHardwareSpinner"
         style="@style/Widget.AppCompat.Spinner.Underlined"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:minHeight="48dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
 
+        <!-- Using layout_weight for more balanced distribution if needed -->
         <Button
             android:id="@+id/btnSync"
-            android:layout_width="wrap_content"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Sync" />
+            android:text="Sync"
+            android:layout_marginEnd="4dp"/> <!-- Small margin -->
 
         <Button
             android:id="@+id/btnScan"
-            android:layout_width="wrap_content"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Scan" />
+            android:text="Scan"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="8dp"/> <!-- Small margin -->
 
         <ProgressBar
             android:id="@+id/spinner2"
             style="?android:attr/progressBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="0"
             android:visibility="gone" />
-
     </LinearLayout>
+
+    <!-- Section: Cards -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cards"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:layout_marginTop="24dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
 
         <Button
             android:id="@+id/btnScanCard"
-            android:layout_width="wrap_content"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Scan card" />
+            android:text="Scan card"
+            android:layout_marginEnd="4dp"/>
 
         <Button
             android:id="@+id/btnCancelScanCard"
-            android:layout_width="wrap_content"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Cancel scan" />
-
+            android:text="Cancel scan"
+            android:layout_marginStart="4dp"/>
+        </LinearLayout>
     </LinearLayout>
-
-</LinearLayout>
+</ScrollView>

@@ -215,7 +215,11 @@ public class MainActivity extends AppCompatActivity {
 
         ((Button) findViewById(R.id.btnSync)).setOnClickListener(v -> {
             String sessionID = sessionSpinner.getSelectedItem().toString();
-            String hardwareID = ((Hardware)hardwareSpinner.getSelectedItem()).id;
+            Hardware hw = ((Hardware)hardwareSpinner.getSelectedItem());
+            if(hw == null) {
+                return;
+            }
+            String hardwareID = hw.id;
 
             View spinner = ((View) findViewById(R.id.spinner2));
             if(spinner.getVisibility() == View.VISIBLE) {
