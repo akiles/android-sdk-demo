@@ -129,7 +129,19 @@
         android:layout_marginTop="8dp"
         android:minHeight="48dp"/>
 
-    <LinearLayout
+        <CheckBox
+            android:id="@+id/useInternet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Use internet" />
+
+        <CheckBox
+            android:id="@+id/useBluetooth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Use bluetooth" />
+
+        <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -137,11 +149,11 @@
         android:layout_marginTop="8dp">
 
         <Button
-            android:id="@+id/btnOpen"
+            android:id="@+id/btnAction"
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Open" />
+            android:text="Action" />
 
         <ProgressBar
             android:id="@+id/spinner"
@@ -153,7 +165,19 @@
     </LinearLayout>
 
     <!-- Section: Hardware -->
-    <TextView
+        <TextView
+            android:id="@+id/actionInternetStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Internet:" />
+
+        <TextView
+            android:id="@+id/actionBluetoothStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bluetooth:" />
+
+        <TextView
         android:id="@+id/hardwareTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

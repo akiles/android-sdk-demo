@@ -9,11 +9,12 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Spinner;
 
-import java.time.Duration;
 import java.util.ArrayList;
 
 import app.akiles.sdk.ActionBluetoothStatus;
@@ -51,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
         akiles = new Akiles(this);
 
         updateSessions();
+
+        ((CheckBox) findViewById(R.id.useInternet)).setChecked(true);
+        ((CheckBox) findViewById(R.id.useBluetooth)).setChecked(true);
 
         sessionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -157,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
+        ((Button) findViewById(R.id.btnAction)).setOnClickListener(v -> {
             if(sessionSpinner.getSelectedItem() == null) {
                 return;
             }
@@ -171,6 +176,10 @@ public class MainActivity extends AppCompatActivity {
             spinner.setVisibility(View.VISIBLE);
 
             ActionOptions options = new ActionOptions();
+            options.useInternet = ((CheckBox) findViewById(R.id.useInternet)).isChecked();
+            options.useBluetooth = ((CheckBox) findViewById(R.id.useBluetooth)).isChecked();
+            TextView internetStatus = ((TextView) findViewById(R.id.actionInternetStatus));
+            TextView bluetoothStatus = ((TextView) findViewById(R.id.actionBluetoothStatus));
             akiles.action(sessionID, gadgetID, actionID, options, new ActionCallback() {
                 @Override
                 public void onSuccess() {
@@ -187,31 +196,49 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onInternetSuccess() {
                     Log.i(TAG, "action: onInternetSuccess");
+                    runOnUiThread(
+                        () -> internetStatus.setText("Internet: Success")
+                    );
                 }
 
                 @Override
                 public void onInternetError(AkilesException ex) {
                     Log.i(TAG, "action: onInternetError " + ex);
+                    runOnUiThread(
+                        () -> internetStatus.setText("Internet: " + ex.toString())
+                    );
                 }
 
                 @Override
                 public void onInternetStatus(ActionInternetStatus status) {
                     Log.i(TAG, "action: onInternetStatus " + status);
+                    runOnUiThread(
+                        () -> internetStatus.setText("Internet: " + status.name())
+                    );
                 }
 
                 @Override
                 public void onBluetoothSuccess() {
                     Log.i(TAG, "action: onBluetoothSuccess");
+                    runOnUiThread(
+                        () -> bluetoothStatus.setText("Bluetooth: Success")
+                    );
                 }
 
                 @Override
                 public void onBluetoothError(AkilesException ex) {
                     Log.i(TAG, "action: onBluetoothError " + ex);
+                    runOnUiThread(
+                        () -> bluetoothStatus.setText("Bluetooth: " + ex.toString())
+                    );
                 }
 
                 @Override
                 public void onBluetoothStatus(ActionBluetoothStatus status) {
                     Log.i(TAG, "action: onBluetoothStatus " + status);
+                    runOnUiThread(
+                        () -> bluetoothStatus.setText("Bluetooth: " + status.name())
+                    );
                 }
 
                 @Override
