@@ -99,6 +99,9 @@ public class MainActivity extends AppCompatActivity {
             });
         });
         ((Button) findViewById(R.id.btnRemoveSession)).setOnClickListener(v -> {
+            if(sessionSpinner.getSelectedItem() == null) {
+                return;
+            }
             String sessionID = sessionSpinner.getSelectedItem().toString();
             try {
                 akiles.removeSession(sessionID);
@@ -118,6 +121,9 @@ public class MainActivity extends AppCompatActivity {
             updateSessions();
         });
         ((Button) findViewById(R.id.btnRefreshSession)).setOnClickListener(v -> {
+            if(sessionSpinner.getSelectedItem() == null) {
+                return;
+            }
             String sessionID = sessionSpinner.getSelectedItem().toString();
             akiles.refreshSession(sessionID, new Callback<Void>() {
                 @Override
@@ -151,7 +157,9 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
-        ((Button) findViewById(R.id.btnOpen)).setOnClickListener(v -> {
+            if(sessionSpinner.getSelectedItem() == null) {
+                return;
+            }
             String sessionID = sessionSpinner.getSelectedItem().toString();
             String gadgetID = ((Gadget)gadgetSpinner.getSelectedItem()).id;
             String actionID = ((GadgetAction)actionSpinner.getSelectedItem()).id;
