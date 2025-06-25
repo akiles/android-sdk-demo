@@ -16,11 +16,20 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // Release repo
+        maven {
+            url = uri("https://maven.akiles.app/release")
+        }
+        // Preview maven repo. Do not use for production!
+        maven {
+            url = uri("https://maven.akiles.app/preview")
+        }
     }
 }
 
 rootProject.name = "sdkdemo"
 include ':app'
-include ':akiles-sdk'
-project(':akiles-sdk').projectDir = file("/home/lulf/work/firmware/apollo-android-sdk/sdk")
 
+// Use SDK from local project (for use by Akiles team only)
+// include ':akiles-sdk'
+// project(':akiles-sdk').projectDir = file("/home/lulf/work/firmware/apollo-android-sdk/sdk")
