@@ -220,6 +220,15 @@
             android:layout_marginStart="4dp"
             android:layout_marginEnd="8dp"/> <!-- Small margin -->
 
+        <Button
+            android:id="@+id/btnCancelScanHardware"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:text="Cancel scan" />
+
         <ProgressBar
             android:id="@+id/spinner2"
             style="?android:attr/progressBarStyle"

@@ -298,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
             spinner.setVisibility(View.VISIBLE);
 
             clearHardwares();
-            akiles.scan(new ScanCallback() {
+            cancel = akiles.scan(new ScanCallback() {
                 @Override
                 public void onDiscover(Hardware hw) {
                     runOnUiThread(() -> updateHardwares(hw));
@@ -318,6 +318,12 @@ public class MainActivity extends AppCompatActivity {
                     showException(ex);
                 }
             });
+        });
+
+        ((Button) findViewById(R.id.btnCancelScanHardware)).setOnClickListener(v -> {
+            if(cancel != null){
+                cancel.cancel();
+            }
         });
 
         ((Button) findViewById(R.id.btnScanCard)).setOnClickListener(v -> {
